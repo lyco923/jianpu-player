@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026简谱 - 动态曲谱播放器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f5f0;
+  --card-bg: #ffffff;
+  --primary: #8B4513;
+  --primary-light: #A0522D;
+  --accent: #D2691E;
+  --text: #333;
+  --text-light: #666;
+  --border: #e0d8c8;
+  --shadow: rgba(139,69,19,0.12);
+  --highlight: rgba(210,105,30,0.35);
+}
+
+body {
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ===== LIST VIEW ===== */
+.list-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.list-header {
+  text-align: center;
+  padding: 40px 20px 30px;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  color: #fff;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.list-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.list-header h1 {
+  font-size: 2.2em;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+
+.list-header p {
+  font-size: 1em;
+  opacity: 0.85;
+  font-weight: 300;
+}
+
+.search-box {
+  max-width: 500px;
+  margin: 20px auto 0;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 24px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 1em;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-box input:focus {
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.25);
+}
+
+.search-box input::placeholder { color: rgba(255,255,255,0.6); }
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.6);
+  font-size: 1.2em;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.score-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.95em;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+  line-height: 1.3;
+  position: relative;
+  overflow: hidden;
+  min-height: 50px;
+}
+
+.score-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform 0.25s;
+}
+
+.score-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.score-btn:hover::after { transform: scaleX(1); }
+
+.score-btn.multi::before {
+  content: '♫';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.7em;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.stats {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-light);
+  font-size: 0.9em;
+}
+
+/* ===== DETAIL VIEW ===== */
+.detail-view {
+  display: none;
+  height: 100vh;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.detail-view.active { display: flex; }
+.list-view.hidden { display: none; }
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  color: #fff;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.back-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.back-btn:hover { background: rgba(255,255,255,0.35); }
+
+.score-title {
+  font-size: 1.4em;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+
+.detail-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* Score display area */
+.score-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+}
+
+.score-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scroll-behavior: smooth;
+  padding: 0;
+}
+
+.score-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.score-scroll::-webkit-scrollbar-track {
+  background: #f0ebe0;
+}
+
+.score-scroll::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+.score-page {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.score-page img {
+  width: 100%;
+  display: block;
+}
+
+/* Highlight bar */
+.highlight-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: var(--highlight);
+  border-top: 3px solid var(--accent);
+  border-bottom: 3px solid var(--accent);
+  pointer-events: none;
+  z-index: 10;
+  transition: top 0.05s linear;
+  display: none;
+}
+
+.highlight-bar.active { display: block; }
+
+.page-divider {
+  text-align: center;
+  padding: 10px;
+  color: var(--text-light);
+  font-size: 0.85em;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  background: #f8f4ee;
+}
+
+/* ===== Metronome ===== */
+.metronome-panel {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  padding: 16px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.metronome-title {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1em;
+  color: var(--primary);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.bpm-display {
+  text-align: center;
+  font-size: 2.4em;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.bpm-label {
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.bpm-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+}
+
+.bpm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.beat-type-group {
+  display: flex;
+  gap: 6px;
+}
+
+.beat-type-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.beat-type-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.pendulum-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 100px;
+}
+
+.pendulum-arm {
+  width: 4px;
+  height: 80px;
+  background: var(--primary);
+  border-radius: 2px;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform-origin: bottom center;
+  transform: translateX(-50%) rotate(0deg);
+  transition: transform 0.08s linear;
+}
+
+.pendulum-ball {
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  border-radius: 50%;
+  position: absolute;
+  top: -12px;
+  left: -10px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.pendulum-pivot {
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.pendulum-base {
+  width: 80px;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.beat-indicator {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.beat-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.1s;
+}
+
+.beat-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.beat-dot.strong {
+  background: var(--primary);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+/* ===== Controls Bar ===== */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  border-top: 2px solid var(--border);
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  padding: 12px 28px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctrl-btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.ctrl-btn.play-btn {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  padding: 12px 36px;
+  font-weight: 600;
+}
+
+.ctrl-btn.play-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+.ctrl-btn.play-btn.active {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.speed-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.speed-label {
+  font-size: 0.85em;
+  color: var(--text-light);
+}
+
+.speed-val {
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 30px;
+}
+
+.scroll-mode-group {
+  display: flex;
+  gap: 6px;
+}
+
+.scroll-mode-btn {
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.scroll-mode-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-nav-btn {
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.page-nav-btn:hover {
+  border-color: var(--primary);
+}
+
+.page-info {
+  font-size: 0.85em;
+  color: var(--text-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .score-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+  }
+  .score-btn { padding: 10px 6px; font-size: 0.85em; }
+  .list-header h1 { font-size: 1.6em; }
+  .detail-body { flex-direction: column; }
+  .metronome-panel {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 10px;
+  }
+  .pendulum-area { min-height: 60px; }
+  .controls-bar { flex-wrap: wrap; padding: 10px; }
+}
+
+@media (max-width: 480px) {
+  .score-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .score-btn { padding: 8px 4px; font-size: 0.8em; min-height: 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LIST VIEW ===== -->
+<div class="list-view" id="listView">
+  <div class="list-header">
+    <h1>2026 简 谱</h1>
+    <p>动态曲谱播放器 · 节拍器同步滚动</p>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索曲谱名称..." oninput="filterScores()">
+      <span class="search-icon">&#128269;</span>
+    </div>
+  </div>
+  <div class="score-grid" id="scoreGrid"></div>
+  <div class="stats" id="stats"></div>
+</div>
+
+<!-- ===== DETAIL VIEW ===== -->
+<div class="detail-view" id="detailView">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">&#9664; 返回列表</button>
+    <div class="score-title" id="scoreTitle"></div>
+  </div>
+  <div class="detail-body">
+    <div class="score-area">
+      <div class="score-scroll" id="scoreScroll">
+        <div class="highlight-bar" id="highlightBar"></div>
+        <div id="scorePages"></div>
+      </div>
+    </div>
+    <div class="metronome-panel">
+      <div class="metronome-title">&#9835; 节拍器</div>
+      <div class="bpm-display" id="bpmDisplay">80</div>
+      <div class="bpm-label">BPM（每分钟节拍数）</div>
+      <input type="range" class="bpm-slider" id="bpmSlider" min="30" max="240" value="80" oninput="updateBPM(this.value)">
+      <div class="beat-type-group">
+        <button class="beat-type-btn active" data-beats="2" onclick="setBeats(2)">2/4</button>
+        <button class="beat-type-btn" data-beats="3" onclick="setBeats(3)">3/4</button>
+        <button class="beat-type-btn" data-beats="4" onclick="setBeats(4)">4/4</button>
+        <button class="beat-type-btn" data-beats="6" onclick="setBeats(6)">6/8</button>
+      </div>
+      <div class="pendulum-area">
+        <div class="pendulum-base"></div>
+        <div class="pendulum-pivot"></div>
+        <div class="pendulum-arm" id="pendulumArm">
+          <div class="pendulum-ball"></div>
+        </div>
+      </div>
+      <div class="beat-indicator" id="beatIndicator"></div>
+    </div>
+  </div>
+  <div class="controls-bar">
+    <div class="page-nav" id="pageNav">
+      <button class="page-nav-btn" onclick="prevPage()">&#9664;</button>
+      <span class="page-info" id="pageInfo">1/1</span>
+      <button class="page-nav-btn" onclick="nextPage()">&#9654;</button>
+    </div>
+    <div class="scroll-mode-group">
+      <button class="scroll-mode-btn active" data-mode="highlight" onclick="setScrollMode('highlight')">高亮条</button>
+      <button class="scroll-mode-btn" data-mode="smooth" onclick="setScrollMode('smooth')">平滑滚动</button>
+    </div>
+    <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">&#9654; 播放</button>
+    <div class="speed-group">
+      <span class="speed-label">滚动速度</span>
+      <button class="ctrl-btn" onclick="setScrollSpeed(0.5)">慢</button>
+      <button class="ctrl-btn" onclick="setScrollSpeed(1)" style="background:var(--accent);color:#fff;border-color:var(--accent);">中</button>
+      <button class="ctrl-btn" onclick="setScrollSpeed(2)">快</button>
+    </div>
+    <button class="ctrl-btn" onclick="resetPosition()">&#8634; 重置</button>
+  </div>
+</div>
+
+<script src="scores_data.js"></script>
+<script>
+// ===== State =====
+let currentScore = null;
+let isPlaying = false;
+let bpm = 80;
+let beats = 4;
+let currentBeat = 0;
+let scrollMode = 'highlight';
+let scrollSpeedFactor = 1;
+let metronomeTimer = null;
+let scrollTimer = null;
+let pendulumAngle = -30;
+let pendulumDir = 1;
+let audioCtx = null;
+let highlightTop = 0;
+let totalScrollHeight = 0;
+let currentPageIndex = 0;
+
+// ===== Audio Context =====
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playClick(strong) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  if (strong) {
+    osc.frequency.value = 1000;
+    gain.gain.value = 0.6;
+  } else {
+    osc.frequency.value = 600;
+    gain.gain.value = 0.35;
+  }
+  
+  osc.type = 'sine';
+  const now = audioCtx.currentTime;
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  osc.start(now);
+  osc.stop(now + 0.08);
+}
+
+// ===== Render List =====
+function renderList() {
+  const grid = document.getElementById('scoreGrid');
+  grid.innerHTML = '';
+  
+  SCORES.forEach((score, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
+    btn.textContent = score.name;
+    btn.onclick = () => openScore(idx);
+    grid.appendChild(btn);
+  });
+  
+  document.getElementById('stats').textContent = 
+    `共 ${SCORES.length} 首曲谱 · ${SCORES.filter(s => s.type === 'multi').length} 首多页曲谱`;
+}
+
+function filterScores() {
+  const query = document.getElementById('searchInput').value.trim();
+  const grid = document.getElementById('scoreGrid');
+  grid.innerHTML = '';
+  
+  const filtered = query ? 
+    SCORES.filter(s => s.name.toLowerCase().includes(query.toLowerCase())) : 
+    SCORES;
+  
+  filtered.forEach((score, idx) => {
+    const origIdx = SCORES.indexOf(score);
+    const btn = document.createElement('button');
+    btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
+    btn.textContent = score.name;
+    btn.onclick = () => openScore(origIdx);
+    grid.appendChild(btn);
+  });
+  
+  document.getElementById('stats').textContent = 
+    `显示 ${filtered.length} / ${SCORES.length} 首`;
+}
+
+// ===== Open Score =====
+function openScore(idx) {
+  currentScore = SCORES[idx];
+  currentPageIndex = 0;
+  
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('active');
+  document.getElementById('scoreTitle').textContent = currentScore.name;
+  
+  renderPages();
+  updatePageNav();
+  resetPosition();
+  
+  // Reset metronome state
+  updateBeatIndicator();
+}
+
+function renderPages() {
+  const container = document.getElementById('scorePages');
+  container.innerHTML = '';
+  
+  currentScore.pages.forEach((pageFile, i) => {
+    if (currentScore.pages.length > 1 && i > 0) {
+      const divider = document.createElement('div');
+      divider.className = 'page-divider';
+      divider.textContent = `— 第 ${i + 1} 页 —`;
+      container.appendChild(divider);
+    }
+    
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'score-page';
+    pageDiv.dataset.page = i;
+    
+    const img = document.createElement('img');
+    img.src = 'images/' + pageFile;
+    img.alt = currentScore.name + ' 第' + (i+1) + '页';
+    img.onload = () => {
+      totalScrollHeight = document.getElementById('scoreScroll').scrollHeight;
+    };
+    
+    pageDiv.appendChild(img);
+    container.appendChild(pageDiv);
+  });
+  
+  // After all images load, update total height
+  setTimeout(() => {
+    totalScrollHeight = document.getElementById('scoreScroll').scrollHeight;
+  }, 500);
+}
+
+function updatePageNav() {
+  const totalPages = currentScore.pages.length;
+  document.getElementById('pageInfo').textContent = 
+    totalPages > 1 ? `${currentPageIndex + 1}/${totalPages}` : '1/1';
+  document.getElementById('pageNav').style.display = 
+    totalPages > 1 ? 'flex' : 'none';
+}
+
+function prevPage() {
+  if (!currentScore || currentPageIndex <= 0) return;
+  currentPageIndex--;
+  scrollToPage(currentPageIndex);
+  updatePageNav();
+}
+
+function nextPage() {
+  if (!currentScore || currentPageIndex >= currentScore.pages.length - 1) return;
+  currentPageIndex++;
+  scrollToPage(currentPageIndex);
+  updatePageNav();
+}
+
+function scrollToPage(pageIdx) {
+  const pages = document.querySelectorAll('.score-page');
+  if (pages[pageIdx]) {
+    pages[pageIdx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ===== Go Back =====
+function goBack() {
+  stopPlay();
+  document.getElementById('listView').classList.remove('hidden');
+  document.getElementById('detailView').classList.remove('active');
+  currentScore = null;
+}
+
+// ===== BPM =====
+function updateBPM(val) {
+  bpm = parseInt(val);
+  document.getElementById('bpmDisplay').textContent = bpm;
+  
+  if (isPlaying) {
+    stopMetronome();
+    startMetronome();
+  }
+}
+
+// ===== Beat Type =====
+function setBeats(n) {
+  beats = n;
+  currentBeat = 0;
+  document.querySelectorAll('.beat-type-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.beats) === n);
+  });
+  updateBeatIndicator();
+}
+
+function updateBeatIndicator() {
+  const container = document.getElementById('beatIndicator');
+  container.innerHTML = '';
+  for (let i = 0; i < beats; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'beat-dot';
+    container.appendChild(dot);
+  }
+}
+
+// ===== Scroll Mode =====
+function setScrollMode(mode) {
+  scrollMode = mode;
+  document.querySelectorAll('.scroll-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  
+  const highlightBar = document.getElementById('highlightBar');
+  highlightBar.classList.toggle('active', mode === 'highlight');
+  
+  if (mode !== 'highlight') {
+    highlightBar.style.display = 'none';
+  }
+}
+
+// ===== Scroll Speed =====
+function setScrollSpeed(factor) {
+  scrollSpeedFactor = factor;
+  if (isPlaying) {
+    stopScrolling();
+    startScrolling();
+  }
+}
+
+// ===== Play / Pause =====
+function togglePlay() {
+  initAudio();
+  if (isPlaying) {
+    stopPlay();
+  } else {
+    startPlay();
+  }
+}
+
+function startPlay() {
+  isPlaying = true;
+  currentBeat = 0;
+  
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = '&#9646;&#9646; 暂停';
+  btn.classList.add('active');
+  
+  if (scrollMode === 'highlight') {
+    document.getElementById('highlightBar').classList.add('active');
+    document.getElementById('highlightBar').style.display = 'block';
+  }
+  
+  startMetronome();
+  startScrolling();
+}
+
+function stopPlay() {
+  isPlaying = false;
+  
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = '&#9654; 播放';
+  btn.classList.remove('active');
+  
+  document.getElementById('highlightBar').classList.remove('active');
+  if (scrollMode !== 'highlight') {
+    document.getElementById('highlightBar').style.display = 'none';
+  }
+  
+  stopMetronome();
+  stopScrolling();
+}
+
+// ===== Metronome =====
+function startMetronome() {
+  stopMetronome();
+  const interval = 60000 / bpm;
+  
+  // First beat immediately
+  tickBeat();
+  
+  metronomeTimer = setInterval(tickBeat, interval);
+}
+
+function stopMetronome() {
+  if (metronomeTimer) {
+    clearInterval(metronomeTimer);
+    metronomeTimer = null;
+  }
+}
+
+function tickBeat() {
+  const isStrong = (currentBeat % beats === 0);
+  playClick(isStrong);
+  
+  // Update beat dots
+  const dots = document.querySelectorAll('.beat-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.remove('active', 'strong');
+  });
+  if (dots[currentBeat % beats]) {
+    dots[currentBeat % beats].classList.add(currentBeat % beats === 0 ? 'strong' : 'active');
+  }
+  
+  // Pendulum animation
+  pendulumDir = pendulumDir > 0 ? -1 : 1;
+  const maxAngle = 30;
+  pendulumAngle = maxAngle * pendulumDir;
+  document.getElementById('pendulumArm').style.transform = 
+    `translateX(-50%) rotate(${pendulumAngle}deg)`;
+  
+  currentBeat++;
+}
+
+// ===== Scrolling =====
+function startScrolling() {
+  stopScrolling();
+  
+  const scrollEl = document.getElementById('scoreScroll');
+  const visibleHeight = scrollEl.clientHeight;
+  totalScrollHeight = scrollEl.scrollHeight;
+  
+  if (totalScrollHeight <= visibleHeight) return;
+  
+  // Calculate pixels per beat to scroll
+  const beatsPerMinute = bpm;
+  const totalBeats = totalScrollHeight / (visibleHeight * 0.5); // approximate total beats
+  const pxPerBeat = (totalScrollHeight - visibleHeight) / (totalBeats * 2);
+  const intervalMs = 60000 / bpm;
+  const pxPerMs = (pxPerBeat * scrollSpeedFactor) / intervalMs;
+  
+  if (scrollMode === 'highlight') {
+    highlightTop = scrollEl.scrollTop;
+    scrollTimer = setInterval(() => {
+      highlightTop += pxPerMs * 16 * scrollSpeedFactor;
+      
+      if (highlightTop >= totalScrollHeight - visibleHeight) {
+        // Loop back to top
+        highlightTop = 0;
+        scrollEl.scrollTop = 0;
+      }
+      
+      scrollEl.scrollTop = highlightTop;
+      
+      const bar = document.getElementById('highlightBar');
+      bar.style.top = (highlightTop - scrollEl.scrollTop + visibleHeight * 0.3) + 'px';
+      
+    }, 16);
+  } else {
+    // Smooth scroll mode
+    scrollTimer = setInterval(() => {
+      const newTop = scrollEl.scrollTop + pxPerMs * 16 * scrollSpeedFactor;
+      
+      if (newTop >= totalScrollHeight - visibleHeight) {
+        scrollEl.scrollTop = 0;
+      } else {
+        scrollEl.scrollTop = newTop;
+      }
+    }, 16);
+  }
+}
+
+function stopScrolling() {
+  if (scrollTimer) {
+    clearInterval(scrollTimer);
+    scrollTimer = null;
+  }
+}
+
+function resetPosition() {
+  const scrollEl = document.getElementById('scoreScroll');
+  scrollEl.scrollTop = 0;
+  highlightTop = 0;
+  
+  const bar = document.getElementById('highlightBar');
+  bar.style.top = '0px';
+  
+  currentBeat = 0;
+  currentPageIndex = 0;
+  if (currentScore) updatePageNav();
+}
+
+// ===== Init =====
+renderList();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && currentScore) {
+    e.preventDefault();
+    togglePlay();
+  }
+  if (e.code === 'Escape' && currentScore) {
+    goBack();
+  }
+});
+</script>
+</body>
+</html>
