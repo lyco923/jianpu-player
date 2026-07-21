@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>2026简谱 - 动态曲谱播放器</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -234,6 +234,12 @@ body {
   position: relative;
   scroll-behavior: smooth;
   padding: 0;
+  touch-action: pan-y;
+}
+
+#scorePages {
+  will-change: transform;
+  transform-origin: 0 0;
 }
 
 .score-scroll::-webkit-scrollbar {
@@ -260,22 +266,7 @@ body {
   display: block;
 }
 
-/* Highlight bar */
-.highlight-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: var(--highlight);
-  border-top: 3px solid var(--accent);
-  border-bottom: 3px solid var(--accent);
-  pointer-events: none;
-  z-index: 10;
-  transition: top 0.05s linear;
-  display: none;
-}
-
-.highlight-bar.active { display: block; }
+/* Highlight bar removed in v1.1 (only smooth scroll mode kept) */
 
 .page-divider {
   text-align: center;
@@ -563,7 +554,7 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   .score-grid {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 8px;
@@ -580,6 +571,16 @@ body {
   }
   .pendulum-area { min-height: 60px; }
   .controls-bar { flex-wrap: wrap; padding: 10px; }
+}
+
+/* 横屏（含手机横屏）自适应：曲谱与节拍器并排 */
+@media (orientation: landscape) and (max-height: 560px) {
+  .detail-body { flex-direction: row; padding: 10px; gap: 10px; }
+  .metronome-panel { width: 180px; padding: 10px; gap: 10px; }
+  .pendulum-area { min-height: 70px; }
+  .controls-bar { flex-wrap: wrap; padding: 8px 12px; gap: 10px; }
+  .detail-header { padding: 8px 16px; }
+  .score-title { font-size: 1.2em; }
 }
 
 @media (max-width: 480px) {
@@ -616,7 +617,6 @@ body {
   <div class="detail-body">
     <div class="score-area">
       <div class="score-scroll" id="scoreScroll">
-        <div class="highlight-bar" id="highlightBar"></div>
         <div id="scorePages"></div>
       </div>
     </div>
@@ -647,9 +647,8 @@ body {
       <span class="page-info" id="pageInfo">1/1</span>
       <button class="page-nav-btn" onclick="nextPage()">&#9654;</button>
     </div>
-    <div class="scroll-mode-group">
-      <button class="scroll-mode-btn active" data-mode="highlight" onclick="setScrollMode('highlight')">高亮条</button>
-      <button class="scroll-mode-btn" data-mode="smooth" onclick="setScrollMode('smooth')">平滑滚动</button>
+    <div class="scroll-mode-group" style="pointer-events:none;">
+      <button class="scroll-mode-btn active" data-mode="smooth">平滑滚动</button>
     </div>
     <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">&#9654; 播放</button>
     <div class="speed-group">
@@ -670,7 +669,7 @@ let isPlaying = false;
 let bpm = 80;
 let beats = 4;
 let currentBeat = 0;
-let scrollMode = 'highlight';
+let scrollMode = 'smooth';
 let scrollSpeedFactor = 1;
 let metronomeTimer = null;
 let scrollTimer = null;
@@ -872,17 +871,7 @@ function updateBeatIndicator() {
 
 // ===== Scroll Mode =====
 function setScrollMode(mode) {
-  scrollMode = mode;
-  document.querySelectorAll('.scroll-mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
-  });
-  
-  const highlightBar = document.getElementById('highlightBar');
-  highlightBar.classList.toggle('active', mode === 'highlight');
-  
-  if (mode !== 'highlight') {
-    highlightBar.style.display = 'none';
-  }
+  scrollMode = 'smooth'; // v1.1 起仅保留平滑滚动模式
 }
 
 // ===== Scroll Speed =====
@@ -912,11 +901,7 @@ function startPlay() {
   btn.innerHTML = '&#9646;&#9646; 暂停';
   btn.classList.add('active');
   
-  if (scrollMode === 'highlight') {
-    document.getElementById('highlightBar').classList.add('active');
-    document.getElementById('highlightBar').style.display = 'block';
-  }
-  
+  resetZoom();
   startMetronome();
   startScrolling();
 }
@@ -927,11 +912,6 @@ function stopPlay() {
   const btn = document.getElementById('playBtn');
   btn.innerHTML = '&#9654; 播放';
   btn.classList.remove('active');
-  
-  document.getElementById('highlightBar').classList.remove('active');
-  if (scrollMode !== 'highlight') {
-    document.getElementById('highlightBar').style.display = 'none';
-  }
   
   stopMetronome();
   stopScrolling();
@@ -995,35 +975,16 @@ function startScrolling() {
   const intervalMs = 60000 / bpm;
   const pxPerMs = (pxPerBeat * scrollSpeedFactor) / intervalMs;
   
-  if (scrollMode === 'highlight') {
-    highlightTop = scrollEl.scrollTop;
-    scrollTimer = setInterval(() => {
-      highlightTop += pxPerMs * 16 * scrollSpeedFactor;
-      
-      if (highlightTop >= totalScrollHeight - visibleHeight) {
-        // Loop back to top
-        highlightTop = 0;
-        scrollEl.scrollTop = 0;
-      }
-      
-      scrollEl.scrollTop = highlightTop;
-      
-      const bar = document.getElementById('highlightBar');
-      bar.style.top = (highlightTop - scrollEl.scrollTop + visibleHeight * 0.3) + 'px';
-      
-    }, 16);
-  } else {
-    // Smooth scroll mode
-    scrollTimer = setInterval(() => {
-      const newTop = scrollEl.scrollTop + pxPerMs * 16 * scrollSpeedFactor;
-      
-      if (newTop >= totalScrollHeight - visibleHeight) {
-        scrollEl.scrollTop = 0;
-      } else {
-        scrollEl.scrollTop = newTop;
-      }
-    }, 16);
-  }
+  // 平滑滚动模式
+  scrollTimer = setInterval(() => {
+    const newTop = scrollEl.scrollTop + pxPerMs * 16 * scrollSpeedFactor;
+    
+    if (newTop >= totalScrollHeight - visibleHeight) {
+      scrollEl.scrollTop = 0;
+    } else {
+      scrollEl.scrollTop = newTop;
+    }
+  }, 16);
 }
 
 function stopScrolling() {
@@ -1038,13 +999,61 @@ function resetPosition() {
   scrollEl.scrollTop = 0;
   highlightTop = 0;
   
-  const bar = document.getElementById('highlightBar');
-  bar.style.top = '0px';
-  
+  resetZoom();
   currentBeat = 0;
   currentPageIndex = 0;
   if (currentScore) updatePageNav();
 }
+
+// ===== 曲谱图片双指缩放（暂停时可用，播放时自动复位）=====
+let zoomScale = 1, zoomTx = 0, zoomTy = 0;
+let pinchStartDist = 0, pinchStartScale = 1;
+let lastSingleX = 0, lastSingleY = 0;
+const scoreScrollEl = document.getElementById('scoreScroll');
+const scorePagesEl = document.getElementById('scorePages');
+
+function applyZoom() {
+  scorePagesEl.style.transform = `translate(${zoomTx}px, ${zoomTy}px) scale(${zoomScale})`;
+}
+
+function resetZoom() {
+  zoomScale = 1; zoomTx = 0; zoomTy = 0;
+  applyZoom();
+}
+
+function getDist(t) {
+  return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+}
+
+scoreScrollEl.addEventListener('touchstart', (e) => {
+  if (isPlaying) return;
+  if (e.touches.length === 2) {
+    pinchStartDist = getDist(e.touches);
+    pinchStartScale = zoomScale;
+  } else if (e.touches.length === 1) {
+    lastSingleX = e.touches[0].clientX;
+    lastSingleY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+scoreScrollEl.addEventListener('touchmove', (e) => {
+  if (isPlaying) return;
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const s = Math.max(1, Math.min(5, pinchStartScale * (getDist(e.touches) / pinchStartDist)));
+    zoomScale = s;
+    applyZoom();
+  } else if (e.touches.length === 1 && zoomScale > 1) {
+    e.preventDefault();
+    zoomTx += e.touches[0].clientX - lastSingleX;
+    zoomTy += e.touches[0].clientY - lastSingleY;
+    lastSingleX = e.touches[0].clientX;
+    lastSingleY = e.touches[0].clientY;
+    applyZoom();
+  }
+}, { passive: false });
+
+scoreScrollEl.addEventListener('dblclick', () => { if (!isPlaying) resetZoom(); });
 
 // ===== Init =====
 renderList();
