@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>2026简谱 - 动态曲谱播放器</title>
+<title>2026简谱 - 曲谱查看器</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #f5f5f0;
-  --card-bg: #ffffff;
-  --primary: #8B4513;
-  --primary-light: #A0522D;
-  --accent: #D2691E;
-  --text: #333;
-  --text-light: #666;
-  --border: #e0d8c8;
-  --shadow: rgba(139,69,19,0.12);
-  --highlight: rgba(210,105,30,0.35);
+  --bg: #161616;
+  --bg-deep: #0e0e0e;
+  --card-bg: #242424;
+  --card-bg-2: #2c2c2c;
+  --primary: #C9803F;
+  --primary-light: #E0935A;
+  --accent: #E8924A;
+  --text: #ECECEC;
+  --text-light: #9A9A9A;
+  --border: #383838;
+  --shadow: rgba(0,0,0,0.45);
 }
 
 body {
@@ -37,8 +38,8 @@ body {
 .list-header {
   text-align: center;
   padding: 40px 20px 30px;
-  background: linear-gradient(135deg, #8B4513, #A0522D);
-  color: #fff;
+  background: linear-gradient(135deg, #3a2415, #5c3a24);
+  color: #f2e9e0;
   border-radius: 16px;
   margin-bottom: 30px;
   position: relative;
@@ -52,7 +53,7 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
   background-size: 30px 30px;
 }
 
@@ -65,7 +66,7 @@ body {
 
 .list-header p {
   font-size: 1em;
-  opacity: 0.85;
+  opacity: 0.8;
   font-weight: 300;
 }
 
@@ -78,28 +79,28 @@ body {
 .search-box input {
   width: 100%;
   padding: 12px 44px 12px 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255,255,255,0.18);
   border-radius: 24px;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
+  background: rgba(0,0,0,0.25);
+  color: var(--text);
   font-size: 1em;
   outline: none;
   transition: all 0.3s;
 }
 
 .search-box input:focus {
-  border-color: rgba(255,255,255,0.6);
-  background: rgba(255,255,255,0.25);
+  border-color: var(--accent);
+  background: rgba(0,0,0,0.4);
 }
 
-.search-box input::placeholder { color: rgba(255,255,255,0.6); }
+.search-box input::placeholder { color: rgba(255,255,255,0.45); }
 
 .search-icon {
   position: absolute;
   right: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.5);
   font-size: 1.2em;
 }
 
@@ -144,6 +145,7 @@ body {
   border-color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--shadow);
+  background: var(--card-bg-2);
 }
 
 .score-btn:hover::after { transform: scaleX(1); }
@@ -180,16 +182,16 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #8B4513, #A0522D);
-  color: #fff;
+  background: linear-gradient(135deg, #3a2415, #5c3a24);
+  color: #f2e9e0;
   gap: 16px;
   flex-shrink: 0;
 }
 
 .back-btn {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.12);
   border: none;
-  color: #fff;
+  color: #f2e9e0;
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -198,7 +200,7 @@ body {
   white-space: nowrap;
 }
 
-.back-btn:hover { background: rgba(255,255,255,0.35); }
+.back-btn:hover { background: rgba(255,255,255,0.25); }
 
 .score-title {
   font-size: 1.4em;
@@ -247,11 +249,11 @@ body {
 }
 
 .score-scroll::-webkit-scrollbar-track {
-  background: #f0ebe0;
+  background: #1c1c1c;
 }
 
 .score-scroll::-webkit-scrollbar-thumb {
-  background: var(--primary);
+  background: #4a3a2a;
   border-radius: 4px;
 }
 
@@ -266,8 +268,6 @@ body {
   display: block;
 }
 
-/* Highlight bar removed in v1.1 (only smooth scroll mode kept) */
-
 .page-divider {
   text-align: center;
   padding: 10px;
@@ -275,27 +275,28 @@ body {
   font-size: 0.85em;
   border-top: 1px dashed var(--border);
   border-bottom: 1px dashed var(--border);
-  background: #f8f4ee;
+  background: var(--card-bg-2);
 }
 
 /* ===== Metronome ===== */
 .metronome-panel {
-  width: 220px;
+  width: 240px;
   display: flex;
   flex-direction: column;
   background: var(--card-bg);
   border-radius: 12px;
   border: 2px solid var(--border);
   padding: 16px;
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .metronome-title {
   text-align: center;
   font-weight: 600;
   font-size: 1.1em;
-  color: var(--primary);
+  color: var(--accent);
   padding-bottom: 8px;
   border-bottom: 2px solid var(--border);
 }
@@ -318,9 +319,10 @@ body {
 .bpm-slider {
   width: 100%;
   -webkit-appearance: none;
+  appearance: none;
   height: 6px;
   border-radius: 3px;
-  background: var(--border);
+  background: #3a3a3a;
   outline: none;
 }
 
@@ -334,6 +336,15 @@ body {
   box-shadow: 0 2px 6px var(--shadow);
 }
 
+.bpm-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
 .beat-type-group {
   display: flex;
   gap: 6px;
@@ -344,7 +355,7 @@ body {
   padding: 8px 4px;
   border: 2px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--card-bg-2);
   font-size: 0.85em;
   cursor: pointer;
   text-align: center;
@@ -354,8 +365,9 @@ body {
 
 .beat-type-btn.active {
   background: var(--accent);
-  color: #fff;
+  color: #1a1a1a;
   border-color: var(--accent);
+  font-weight: 600;
 }
 
 .pendulum-area {
@@ -406,7 +418,7 @@ body {
 .pendulum-base {
   width: 80px;
   height: 8px;
-  background: var(--border);
+  background: #4a4a4a;
   border-radius: 4px;
   position: absolute;
   bottom: 12px;
@@ -425,7 +437,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--border);
+  background: #3a3a3a;
   transition: background 0.1s;
 }
 
@@ -439,118 +451,63 @@ body {
   box-shadow: 0 0 12px var(--primary);
 }
 
-/* ===== Controls Bar ===== */
-.controls-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 20px;
-  background: var(--card-bg);
-  border-top: 2px solid var(--border);
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.ctrl-btn {
-  padding: 12px 28px;
-  border: 2px solid var(--border);
+/* Metronome toggle button */
+.metro-toggle {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--accent);
   border-radius: 12px;
-  background: #fff;
-  font-size: 1em;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ctrl-btn:hover {
-  border-color: var(--primary);
-  box-shadow: 0 2px 8px var(--shadow);
-}
-
-.ctrl-btn.play-btn {
   background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  padding: 12px 36px;
+  color: #1a1a1a;
+  font-size: 1em;
   font-weight: 600;
-}
-
-.ctrl-btn.play-btn:hover {
-  background: var(--primary-light);
-  border-color: var(--primary-light);
-}
-
-.ctrl-btn.play-btn.active {
-  background: #c0392b;
-  border-color: #c0392b;
-}
-
-.speed-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.speed-label {
-  font-size: 0.85em;
-  color: var(--text-light);
-}
-
-.speed-val {
-  font-weight: 600;
-  color: var(--accent);
-  min-width: 30px;
-}
-
-.scroll-mode-group {
-  display: flex;
-  gap: 6px;
-}
-
-.scroll-mode-btn {
-  padding: 8px 14px;
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-  font-size: 0.85em;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--text);
 }
 
-.scroll-mode-btn.active {
-  background: var(--primary);
+.metro-toggle:hover { background: var(--primary-light); border-color: var(--primary-light); }
+
+.metro-toggle.running {
+  background: #b3432f;
+  border-color: #b3432f;
   color: #fff;
-  border-color: var(--primary);
 }
 
+/* Page nav (moved into side panel) */
 .page-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 2px solid var(--border);
 }
 
 .page-nav-btn {
-  padding: 8px 12px;
+  padding: 8px 14px;
   border: 2px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--card-bg-2);
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.95em;
   transition: all 0.2s;
   color: var(--text);
 }
 
-.page-nav-btn:hover {
-  border-color: var(--primary);
-}
+.page-nav-btn:hover { border-color: var(--primary); }
 
 .page-info {
-  font-size: 0.85em;
+  font-size: 0.9em;
   color: var(--text-light);
+  min-width: 44px;
+  text-align: center;
+}
+
+.zoom-hint {
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--text-light);
+  opacity: 0.8;
 }
 
 /* Responsive */
@@ -568,17 +525,18 @@ body {
     flex-wrap: wrap;
     padding: 10px;
     gap: 10px;
+    max-height: 38vh;
   }
-  .pendulum-area { min-height: 60px; }
-  .controls-bar { flex-wrap: wrap; padding: 10px; }
+  .metronome-title { width: 100%; }
+  .pendulum-area { min-height: 60px; flex: 1; }
+  .bpm-display { font-size: 1.8em; }
 }
 
 /* 横屏（含手机横屏）自适应：曲谱与节拍器并排 */
 @media (orientation: landscape) and (max-height: 560px) {
   .detail-body { flex-direction: row; padding: 10px; gap: 10px; }
-  .metronome-panel { width: 180px; padding: 10px; gap: 10px; }
+  .metronome-panel { width: 200px; padding: 10px; gap: 10px; max-height: none; }
   .pendulum-area { min-height: 70px; }
-  .controls-bar { flex-wrap: wrap; padding: 8px 12px; gap: 10px; }
   .detail-header { padding: 8px 16px; }
   .score-title { font-size: 1.2em; }
 }
@@ -598,7 +556,7 @@ body {
 <div class="list-view" id="listView">
   <div class="list-header">
     <h1>2026 简 谱</h1>
-    <p>动态曲谱播放器 · 节拍器同步滚动</p>
+    <p>曲谱查看器 · 节拍器打拍 · 双指缩放</p>
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="搜索曲谱名称..." oninput="filterScores()">
       <span class="search-icon">&#128269;</span>
@@ -639,25 +597,14 @@ body {
         </div>
       </div>
       <div class="beat-indicator" id="beatIndicator"></div>
+      <button class="metro-toggle" id="metroBtn" onclick="toggleMetronome()">&#9654; 开始节拍</button>
+      <div class="page-nav" id="pageNav">
+        <button class="page-nav-btn" onclick="prevPage()">&#9664;</button>
+        <span class="page-info" id="pageInfo">1/1</span>
+        <button class="page-nav-btn" onclick="nextPage()">&#9654;</button>
+      </div>
+      <div class="zoom-hint">双指缩放 · 双击还原</div>
     </div>
-  </div>
-  <div class="controls-bar">
-    <div class="page-nav" id="pageNav">
-      <button class="page-nav-btn" onclick="prevPage()">&#9664;</button>
-      <span class="page-info" id="pageInfo">1/1</span>
-      <button class="page-nav-btn" onclick="nextPage()">&#9654;</button>
-    </div>
-    <div class="scroll-mode-group" style="pointer-events:none;">
-      <button class="scroll-mode-btn active" data-mode="smooth">平滑滚动</button>
-    </div>
-    <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">&#9654; 播放</button>
-    <div class="speed-group">
-      <span class="speed-label">滚动速度</span>
-      <button class="ctrl-btn" onclick="setScrollSpeed(0.5)">慢</button>
-      <button class="ctrl-btn" onclick="setScrollSpeed(1)" style="background:var(--accent);color:#fff;border-color:var(--accent);">中</button>
-      <button class="ctrl-btn" onclick="setScrollSpeed(2)">快</button>
-    </div>
-    <button class="ctrl-btn" onclick="resetPosition()">&#8634; 重置</button>
   </div>
 </div>
 
@@ -665,19 +612,14 @@ body {
 <script>
 // ===== State =====
 let currentScore = null;
-let isPlaying = false;
 let bpm = 80;
 let beats = 4;
 let currentBeat = 0;
-let scrollMode = 'smooth';
-let scrollSpeedFactor = 1;
+let metronomeRunning = false;
 let metronomeTimer = null;
-let scrollTimer = null;
 let pendulumAngle = -30;
 let pendulumDir = 1;
 let audioCtx = null;
-let highlightTop = 0;
-let totalScrollHeight = 0;
 let currentPageIndex = 0;
 
 // ===== Audio Context =====
@@ -696,7 +638,7 @@ function playClick(strong) {
   const gain = audioCtx.createGain();
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-  
+
   if (strong) {
     osc.frequency.value = 1000;
     gain.gain.value = 0.6;
@@ -704,7 +646,7 @@ function playClick(strong) {
     osc.frequency.value = 600;
     gain.gain.value = 0.35;
   }
-  
+
   osc.type = 'sine';
   const now = audioCtx.currentTime;
   gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
@@ -716,7 +658,7 @@ function playClick(strong) {
 function renderList() {
   const grid = document.getElementById('scoreGrid');
   grid.innerHTML = '';
-  
+
   SCORES.forEach((score, idx) => {
     const btn = document.createElement('button');
     btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
@@ -724,8 +666,8 @@ function renderList() {
     btn.onclick = () => openScore(idx);
     grid.appendChild(btn);
   });
-  
-  document.getElementById('stats').textContent = 
+
+  document.getElementById('stats').textContent =
     `共 ${SCORES.length} 首曲谱 · ${SCORES.filter(s => s.type === 'multi').length} 首多页曲谱`;
 }
 
@@ -733,12 +675,12 @@ function filterScores() {
   const query = document.getElementById('searchInput').value.trim();
   const grid = document.getElementById('scoreGrid');
   grid.innerHTML = '';
-  
-  const filtered = query ? 
-    SCORES.filter(s => s.name.toLowerCase().includes(query.toLowerCase())) : 
+
+  const filtered = query ?
+    SCORES.filter(s => s.name.toLowerCase().includes(query.toLowerCase())) :
     SCORES;
-  
-  filtered.forEach((score, idx) => {
+
+  filtered.forEach((score) => {
     const origIdx = SCORES.indexOf(score);
     const btn = document.createElement('button');
     btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
@@ -746,8 +688,8 @@ function filterScores() {
     btn.onclick = () => openScore(origIdx);
     grid.appendChild(btn);
   });
-  
-  document.getElementById('stats').textContent = 
+
+  document.getElementById('stats').textContent =
     `显示 ${filtered.length} / ${SCORES.length} 首`;
 }
 
@@ -755,23 +697,21 @@ function filterScores() {
 function openScore(idx) {
   currentScore = SCORES[idx];
   currentPageIndex = 0;
-  
+
   document.getElementById('listView').classList.add('hidden');
   document.getElementById('detailView').classList.add('active');
   document.getElementById('scoreTitle').textContent = currentScore.name;
-  
+
   renderPages();
   updatePageNav();
   resetPosition();
-  
-  // Reset metronome state
   updateBeatIndicator();
 }
 
 function renderPages() {
   const container = document.getElementById('scorePages');
   container.innerHTML = '';
-  
+
   currentScore.pages.forEach((pageFile, i) => {
     if (currentScore.pages.length > 1 && i > 0) {
       const divider = document.createElement('div');
@@ -779,33 +719,24 @@ function renderPages() {
       divider.textContent = `— 第 ${i + 1} 页 —`;
       container.appendChild(divider);
     }
-    
+
     const pageDiv = document.createElement('div');
     pageDiv.className = 'score-page';
     pageDiv.dataset.page = i;
-    
+
     const img = document.createElement('img');
     img.src = 'images/' + pageFile;
     img.alt = currentScore.name + ' 第' + (i+1) + '页';
-    img.onload = () => {
-      totalScrollHeight = document.getElementById('scoreScroll').scrollHeight;
-    };
-    
     pageDiv.appendChild(img);
     container.appendChild(pageDiv);
   });
-  
-  // After all images load, update total height
-  setTimeout(() => {
-    totalScrollHeight = document.getElementById('scoreScroll').scrollHeight;
-  }, 500);
 }
 
 function updatePageNav() {
   const totalPages = currentScore.pages.length;
-  document.getElementById('pageInfo').textContent = 
+  document.getElementById('pageInfo').textContent =
     totalPages > 1 ? `${currentPageIndex + 1}/${totalPages}` : '1/1';
-  document.getElementById('pageNav').style.display = 
+  document.getElementById('pageNav').style.display =
     totalPages > 1 ? 'flex' : 'none';
 }
 
@@ -832,7 +763,7 @@ function scrollToPage(pageIdx) {
 
 // ===== Go Back =====
 function goBack() {
-  stopPlay();
+  stopMetronome();
   document.getElementById('listView').classList.remove('hidden');
   document.getElementById('detailView').classList.remove('active');
   currentScore = null;
@@ -842,8 +773,8 @@ function goBack() {
 function updateBPM(val) {
   bpm = parseInt(val);
   document.getElementById('bpmDisplay').textContent = bpm;
-  
-  if (isPlaying) {
+
+  if (metronomeRunning) {
     stopMetronome();
     startMetronome();
   }
@@ -869,66 +800,32 @@ function updateBeatIndicator() {
   }
 }
 
-// ===== Scroll Mode =====
-function setScrollMode(mode) {
-  scrollMode = 'smooth'; // v1.1 起仅保留平滑滚动模式
-}
-
-// ===== Scroll Speed =====
-function setScrollSpeed(factor) {
-  scrollSpeedFactor = factor;
-  if (isPlaying) {
-    stopScrolling();
-    startScrolling();
-  }
-}
-
-// ===== Play / Pause =====
-function togglePlay() {
-  initAudio();
-  if (isPlaying) {
-    stopPlay();
-  } else {
-    startPlay();
-  }
-}
-
-function startPlay() {
-  isPlaying = true;
-  currentBeat = 0;
-  
-  const btn = document.getElementById('playBtn');
-  btn.innerHTML = '&#9646;&#9646; 暂停';
-  btn.classList.add('active');
-  
-  resetZoom();
-  startMetronome();
-  startScrolling();
-}
-
-function stopPlay() {
-  isPlaying = false;
-  
-  const btn = document.getElementById('playBtn');
-  btn.innerHTML = '&#9654; 播放';
-  btn.classList.remove('active');
-  
-  stopMetronome();
-  stopScrolling();
-}
-
 // ===== Metronome =====
+function toggleMetronome() {
+  initAudio();
+  if (metronomeRunning) {
+    stopMetronome();
+  } else {
+    startMetronome();
+  }
+}
+
 function startMetronome() {
-  stopMetronome();
+  metronomeRunning = true;
+  currentBeat = 0;
+  const btn = document.getElementById('metroBtn');
+  btn.innerHTML = '&#9646;&#9646; 停止节拍';
+  btn.classList.add('running');
   const interval = 60000 / bpm;
-  
-  // First beat immediately
   tickBeat();
-  
   metronomeTimer = setInterval(tickBeat, interval);
 }
 
 function stopMetronome() {
+  metronomeRunning = false;
+  const btn = document.getElementById('metroBtn');
+  btn.innerHTML = '&#9654; 开始节拍';
+  btn.classList.remove('running');
   if (metronomeTimer) {
     clearInterval(metronomeTimer);
     metronomeTimer = null;
@@ -938,74 +835,32 @@ function stopMetronome() {
 function tickBeat() {
   const isStrong = (currentBeat % beats === 0);
   playClick(isStrong);
-  
-  // Update beat dots
+
   const dots = document.querySelectorAll('.beat-dot');
-  dots.forEach((dot, i) => {
-    dot.classList.remove('active', 'strong');
-  });
+  dots.forEach((dot) => dot.classList.remove('active', 'strong'));
   if (dots[currentBeat % beats]) {
     dots[currentBeat % beats].classList.add(currentBeat % beats === 0 ? 'strong' : 'active');
   }
-  
-  // Pendulum animation
+
   pendulumDir = pendulumDir > 0 ? -1 : 1;
   const maxAngle = 30;
   pendulumAngle = maxAngle * pendulumDir;
-  document.getElementById('pendulumArm').style.transform = 
+  document.getElementById('pendulumArm').style.transform =
     `translateX(-50%) rotate(${pendulumAngle}deg)`;
-  
+
   currentBeat++;
-}
-
-// ===== Scrolling =====
-function startScrolling() {
-  stopScrolling();
-  
-  const scrollEl = document.getElementById('scoreScroll');
-  const visibleHeight = scrollEl.clientHeight;
-  totalScrollHeight = scrollEl.scrollHeight;
-  
-  if (totalScrollHeight <= visibleHeight) return;
-  
-  // Calculate pixels per beat to scroll
-  const beatsPerMinute = bpm;
-  const totalBeats = totalScrollHeight / (visibleHeight * 0.5); // approximate total beats
-  const pxPerBeat = (totalScrollHeight - visibleHeight) / (totalBeats * 2);
-  const intervalMs = 60000 / bpm;
-  const pxPerMs = (pxPerBeat * scrollSpeedFactor) / intervalMs;
-  
-  // 平滑滚动模式
-  scrollTimer = setInterval(() => {
-    const newTop = scrollEl.scrollTop + pxPerMs * 16 * scrollSpeedFactor;
-    
-    if (newTop >= totalScrollHeight - visibleHeight) {
-      scrollEl.scrollTop = 0;
-    } else {
-      scrollEl.scrollTop = newTop;
-    }
-  }, 16);
-}
-
-function stopScrolling() {
-  if (scrollTimer) {
-    clearInterval(scrollTimer);
-    scrollTimer = null;
-  }
 }
 
 function resetPosition() {
   const scrollEl = document.getElementById('scoreScroll');
   scrollEl.scrollTop = 0;
-  highlightTop = 0;
-  
   resetZoom();
   currentBeat = 0;
   currentPageIndex = 0;
   if (currentScore) updatePageNav();
 }
 
-// ===== 曲谱图片双指缩放（暂停时可用，播放时自动复位）=====
+// ===== 曲谱图片双指缩放（始终可用）=====
 let zoomScale = 1, zoomTx = 0, zoomTy = 0;
 let pinchStartDist = 0, pinchStartScale = 1;
 let lastSingleX = 0, lastSingleY = 0;
@@ -1026,7 +881,6 @@ function getDist(t) {
 }
 
 scoreScrollEl.addEventListener('touchstart', (e) => {
-  if (isPlaying) return;
   if (e.touches.length === 2) {
     pinchStartDist = getDist(e.touches);
     pinchStartScale = zoomScale;
@@ -1037,7 +891,6 @@ scoreScrollEl.addEventListener('touchstart', (e) => {
 }, { passive: true });
 
 scoreScrollEl.addEventListener('touchmove', (e) => {
-  if (isPlaying) return;
   if (e.touches.length === 2) {
     e.preventDefault();
     const s = Math.max(1, Math.min(5, pinchStartScale * (getDist(e.touches) / pinchStartDist)));
@@ -1053,7 +906,7 @@ scoreScrollEl.addEventListener('touchmove', (e) => {
   }
 }, { passive: false });
 
-scoreScrollEl.addEventListener('dblclick', () => { if (!isPlaying) resetZoom(); });
+scoreScrollEl.addEventListener('dblclick', resetZoom);
 
 // ===== Init =====
 renderList();
@@ -1062,7 +915,7 @@ renderList();
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && currentScore) {
     e.preventDefault();
-    togglePlay();
+    toggleMetronome();
   }
   if (e.code === 'Escape' && currentScore) {
     goBack();
