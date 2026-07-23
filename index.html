@@ -510,6 +510,62 @@ body {
   opacity: 0.8;
 }
 
+/* Sound control (volume + mute) */
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mute-btn {
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg-2);
+  color: var(--text);
+  font-size: 0.85em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  min-width: 56px;
+}
+
+.mute-btn:hover { border-color: var(--primary); }
+
+.mute-btn.muted {
+  opacity: 0.45;
+  text-decoration: line-through;
+  color: var(--text-light);
+}
+
+.vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #3a3a3a;
+  outline: none;
+}
+
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.vol-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
 /* Responsive */
 @media (max-width: 768px) and (orientation: portrait) {
   .score-grid {
@@ -603,6 +659,10 @@ body {
         <span class="page-info" id="pageInfo">1/1</span>
         <button class="page-nav-btn" onclick="nextPage()">&#9654;</button>
       </div>
+      <div class="sound-row">
+        <button class="mute-btn" id="muteBtn" onclick="toggleMute()">声音</button>
+        <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" oninput="updateVolume(this.value)">
+      </div>
       <div class="zoom-hint">双指缩放 · 双击还原</div>
     </div>
   </div>
@@ -620,6 +680,8 @@ let metronomeTimer = null;
 let pendulumAngle = -30;
 let pendulumDir = 1;
 let audioCtx = null;
+let volume = 0.8;
+let muted = false;
 let currentPageIndex = 0;
 
 // ===== Audio Context =====
@@ -633,25 +695,53 @@ function initAudio() {
 }
 
 function playClick(strong) {
-  if (!audioCtx) return;
+  if (!audioCtx || muted) return;
+  const now = audioCtx.currentTime;
+
+  // 主音：三角波 + 快速频率下滑，模拟木质"咔哒"敲击瞬态
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  osc.type = 'triangle';
+  const baseFreq = strong ? 1500 : 950;   // 强拍更亮更高，弱拍低沉
+  osc.frequency.setValueAtTime(baseFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.45, now + 0.045);
 
-  if (strong) {
-    osc.frequency.value = 1000;
-    gain.gain.value = 0.6;
-  } else {
-    osc.frequency.value = 600;
-    gain.gain.value = 0.35;
-  }
+  const peak = (strong ? 1.0 : 0.62) * volume;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(peak, now + 0.001);   // 极快起音
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.095); // 快速衰减
 
-  osc.type = 'sine';
-  const now = audioCtx.currentTime;
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  osc.connect(gain).connect(audioCtx.destination);
   osc.start(now);
-  osc.stop(now + 0.08);
+  osc.stop(now + 0.11);
+
+  // 低频"body"：增强敲击的木质厚度（强拍更突出）
+  const body = audioCtx.createOscillator();
+  const bodyGain = audioCtx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(strong ? 320 : 220, now);
+  const bodyPeak = (strong ? 0.5 : 0.3) * volume;
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(bodyPeak, now + 0.002);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+  body.connect(bodyGain).connect(audioCtx.destination);
+  body.start(now);
+  body.stop(now + 0.08);
+}
+
+// ===== Sound controls =====
+function updateVolume(val) {
+  volume = parseInt(val) / 100;
+  muted = (volume === 0);
+  document.getElementById('muteBtn').classList.toggle('muted', muted);
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('muteBtn').classList.toggle('muted', muted);
+  if (!muted && audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
 }
 
 // ===== Render List =====
