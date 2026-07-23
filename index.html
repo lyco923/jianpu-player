@@ -698,35 +698,63 @@ function playClick(strong) {
   if (!audioCtx || muted) return;
   const now = audioCtx.currentTime;
 
-  // 主音：三角波 + 快速频率下滑，模拟木质"咔哒"敲击瞬态
+  // 木鱼声：短促清脆、空灵感、高频泛音 + 快衰减
+  // 强拍：更亮、更响、略长；弱拍：更短、更柔
+
+  const duration = strong ? 0.09 : 0.055;
+  const startFreq = strong ? 2600 : 2100;
+  const endFreq = strong ? 1050 : 850;
+  const peak = (strong ? 1.0 : 0.6) * volume;
+
+  // 主音：方波模拟木质空心体敲击
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = 'triangle';
-  const baseFreq = strong ? 1500 : 950;   // 强拍更亮更高，弱拍低沉
-  osc.frequency.setValueAtTime(baseFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.45, now + 0.045);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(startFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration * 0.85);
 
-  const peak = (strong ? 1.0 : 0.62) * volume;
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(peak, now + 0.001);   // 极快起音
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.095); // 快速衰减
+  gain.gain.exponentialRampToValueAtTime(peak, now + 0.0015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-  osc.connect(gain).connect(audioCtx.destination);
+  // 高频泛音：让木鱼更“亮”更“脆”
+  const harm = audioCtx.createOscillator();
+  const harmGain = audioCtx.createGain();
+  harm.type = 'sine';
+  harm.frequency.setValueAtTime(startFreq * 1.7, now);
+  harm.frequency.exponentialRampToValueAtTime(endFreq * 1.8, now + duration * 0.8);
+  const harmPeak = (strong ? 0.55 : 0.35) * volume;
+  harmGain.gain.setValueAtTime(0.0001, now);
+  harmGain.gain.exponentialRampToValueAtTime(harmPeak, now + 0.001);
+  harmGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.65);
+
+  // 用低通滤波器削掉方波过尖锐的部分，让听感更“木”更自然
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(3800, now);
+  filter.Q.value = 0.6;
+
+  osc.connect(gain).connect(filter).connect(audioCtx.destination);
+  harm.connect(harmGain).connect(filter).connect(audioCtx.destination);
   osc.start(now);
-  osc.stop(now + 0.11);
+  osc.stop(now + duration + 0.01);
+  harm.start(now);
+  harm.stop(now + duration + 0.01);
 
-  // 低频"body"：增强敲击的木质厚度（强拍更突出）
-  const body = audioCtx.createOscillator();
-  const bodyGain = audioCtx.createGain();
-  body.type = 'sine';
-  body.frequency.setValueAtTime(strong ? 320 : 220, now);
-  const bodyPeak = (strong ? 0.5 : 0.3) * volume;
-  bodyGain.gain.setValueAtTime(0.0001, now);
-  bodyGain.gain.exponentialRampToValueAtTime(bodyPeak, now + 0.002);
-  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-  body.connect(bodyGain).connect(audioCtx.destination);
-  body.start(now);
-  body.stop(now + 0.08);
+  // 强拍加一点低频余韵，让第一拍更“实”
+  if (strong) {
+    const body = audioCtx.createOscillator();
+    const bodyGain = audioCtx.createGain();
+    body.type = 'sine';
+    body.frequency.setValueAtTime(420, now);
+    body.frequency.exponentialRampToValueAtTime(180, now + 0.11);
+    bodyGain.gain.setValueAtTime(0.0001, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.28 * volume, now + 0.002);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    body.connect(bodyGain).connect(audioCtx.destination);
+    body.start(now);
+    body.stop(now + 0.13);
+  }
 }
 
 // ===== Sound controls =====
