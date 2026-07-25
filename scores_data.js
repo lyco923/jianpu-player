@@ -1,4 +1,3 @@
-// 曲谱数据。pages 为纯图片文件名（如 img0001.png）；实际地址 = app.js 中 IMG_BASE_URL 前缀 + 此文件名。
 const SCORES = [
   {
     "name": "eutopia",
@@ -1355,6 +1354,480 @@ const SCORES = [
     "name": "默",
     "pages": [
       "img0206.JPG"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "你一定要幸福",
+    "pages": [
+      "img0207.jpg",
+      "img0208.jpg",
+      "img0209.jpg"
+    ],
+    "type": "multi"
+  },
+  {
+    "name": "后来的我们",
+    "pages": [
+      "img0210.jpg",
+      "img0211.jpg"
+    ],
+    "type": "multi"
+  },
+  {
+    "name": "夏夜最后的烟火",
+    "pages": [
+      "img0212.jpg",
+      "img0213.jpg"
+    ],
+    "type": "multi"
+  },
+  {
+    "name": "空白格",
+    "pages": [
+      "img0214.jpg",
+      "img0215.jpg"
+    ],
+    "type": "multi"
+  },
+  {
+    "name": "三寸天堂",
+    "pages": [
+      "img0216.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "下完这场雨",
+    "pages": [
+      "img0217.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "不谓侠",
+    "pages": [
+      "img0218.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "乌兰巴托的夜",
+    "pages": [
+      "img0219.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "九万字",
+    "pages": [
+      "img0220.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "五声音阶",
+    "pages": [
+      "img0221.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "你瞒我瞒",
+    "pages": [
+      "img0222.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "佳人伴孤灯",
+    "pages": [
+      "img0223.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "别怕我伤心",
+    "pages": [
+      "img0224.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "千与千寻",
+    "pages": [
+      "img0225.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "千百度",
+    "pages": [
+      "img0226.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "千秋此意",
+    "pages": [
+      "img0227.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "半城烟沙",
+    "pages": [
+      "img0228.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "半生雪",
+    "pages": [
+      "img0229.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "只要平凡",
+    "pages": [
+      "img0230.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "只要有你",
+    "pages": [
+      "img0231.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "吹灭小山河",
+    "pages": [
+      "img0232.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "哈尼宝贝",
+    "pages": [
+      "img0233.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "啦啦啦",
+    "pages": [
+      "img0234.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "回梦游仙",
+    "pages": [
+      "img0235.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "堕",
+    "pages": [
+      "img0236.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "大花轿",
+    "pages": [
+      "img0237.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "天赋",
+    "pages": [
+      "img0238.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "如果爱忘了",
+    "pages": [
+      "img0239.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "安河桥",
+    "pages": [
+      "img0240.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "岸边客",
+    "pages": [
+      "img0241.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "弱水三千",
+    "pages": [
+      "img0242.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "惊鸿一面",
+    "pages": [
+      "img0243.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "懂你",
+    "pages": [
+      "img0244.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "我们的纪念",
+    "pages": [
+      "img0245.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "我爱你洞洞谱",
+    "pages": [
+      "img0246.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "故里逢春",
+    "pages": [
+      "img0247.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "无羁",
+    "pages": [
+      "img0248.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "明月天涯",
+    "pages": [
+      "img0249.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "春三月",
+    "pages": [
+      "img0250.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "梦底",
+    "pages": [
+      "img0251.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "江南",
+    "pages": [
+      "img0252.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "海绵宝宝",
+    "pages": [
+      "img0253.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "清心音落魄抄",
+    "pages": [
+      "img0254.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "爱江山更爱美人",
+    "pages": [
+      "img0255.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "痴情冢",
+    "pages": [
+      "img0256.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "相思引",
+    "pages": [
+      "img0257.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "答案",
+    "pages": [
+      "img0258.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "精忠报国",
+    "pages": [
+      "img0259.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "给我一个理由忘记",
+    "pages": [
+      "img0260.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "老人与海",
+    "pages": [
+      "img0261.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "芊芊",
+    "pages": [
+      "img0262.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "茶花开了",
+    "pages": [
+      "img0263.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "荒筒音作2",
+    "pages": [
+      "img0264.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "西厢寻她",
+    "pages": [
+      "img0265.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "西楼别序",
+    "pages": [
+      "img0266.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "诀别书前奏",
+    "pages": [
+      "img0267.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "诀别书笛子谱",
+    "pages": [
+      "img0268.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "说谎",
+    "pages": [
+      "img0269.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "身骑白马",
+    "pages": [
+      "img0270.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "铁血丹心",
+    "pages": [
+      "img0271.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "错位的时空",
+    "pages": [
+      "img0272.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "问",
+    "pages": [
+      "img0273.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "青丝",
+    "pages": [
+      "img0274.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "音阶递进",
+    "pages": [
+      "img0275.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "须尽欢",
+    "pages": [
+      "img0276.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "鸟之诗",
+    "pages": [
+      "img0277.jpg"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "黄昏",
+    "pages": [
+      "img0278.jpg"
     ],
     "type": "single"
   }
