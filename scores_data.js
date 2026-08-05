@@ -1830,6 +1830,20 @@ const SCORES = [
       "img0278.jpg"
     ],
     "type": "single"
+  },
+  {
+    "name": "圣诞快乐劳伦斯先生",
+    "pages": [
+      "img0279.png"
+    ],
+    "type": "single"
+  },
+  {
+    "name": "琵琶行间奏",
+    "pages": [
+      "img0280.png"
+    ],
+    "type": "single"
   }
 ];
 
