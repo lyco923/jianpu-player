@@ -160,6 +160,68 @@ body {
   opacity: 0.7;
 }
 
+.score-item {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.score-item .score-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.star {
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3em;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  transition: all 0.2s;
+}
+
+.star:hover {
+  border-color: var(--primary);
+  color: #ffd24a;
+  transform: translateY(-2px);
+}
+
+.star.on {
+  color: #ffc83d;
+  border-color: #ffc83d;
+}
+
+.fav-toggle {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 18px;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.22);
+  border-radius: 20px;
+  color: #f0f0f0;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.fav-toggle:hover {
+  border-color: #ffd24a;
+  color: #fff;
+}
+
+.fav-toggle.active {
+  border-color: #ffc83d;
+  color: #ffc83d;
+  background: rgba(255,200,61,0.12);
+}
+
 .stats {
   text-align: center;
   padding: 20px;
@@ -617,6 +679,7 @@ body {
       <input type="text" id="searchInput" placeholder="搜索曲谱名称..." oninput="filterScores()">
       <span class="search-icon">&#128269;</span>
     </div>
+    <button class="fav-toggle" id="favToggle" onclick="toggleFavOnly()">&#9734; 只看收藏</button>
   </div>
   <div class="score-grid" id="scoreGrid"></div>
   <div class="stats" id="stats"></div>
@@ -684,6 +747,38 @@ let masterGain = null;
 let volume = 0.8;
 let muted = false;
 let currentPageIndex = 0;
+
+// ===== Favorites (星标收藏) =====
+let favorites = new Set();
+let showFavOnly = false;
+const FAV_KEY = 'jianpu_favorites';
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(FAV_KEY);
+    if (raw) JSON.parse(raw).forEach(n => favorites.add(n));
+  } catch (e) {}
+}
+
+function saveFavorites() {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...favorites])); } catch (e) {}
+}
+
+function toggleFavorite(name, ev) {
+  if (ev) ev.stopPropagation();
+  if (favorites.has(name)) favorites.delete(name);
+  else favorites.add(name);
+  saveFavorites();
+  filterScores();
+}
+
+function toggleFavOnly() {
+  showFavOnly = !showFavOnly;
+  const btn = document.getElementById('favToggle');
+  btn.classList.toggle('active', showFavOnly);
+  btn.innerHTML = showFavOnly ? '&#9733; 显示全部' : '&#9734; 只看收藏';
+  filterScores();
+}
 
 // ===== Audio Context =====
 function initAudio() {
@@ -772,42 +867,59 @@ function toggleMute() {
 }
 
 // ===== Render List =====
-function renderList() {
+function buildItem(score, origIdx) {
+  const item = document.createElement('div');
+  item.className = 'score-item';
+  const isFav = favorites.has(score.name);
+  const star = document.createElement('span');
+  star.className = 'star' + (isFav ? ' on' : '');
+  star.textContent = isFav ? '\u2605' : '\u2606';
+  star.title = isFav ? '取消收藏' : '收藏到前面';
+  star.onclick = (e) => toggleFavorite(score.name, e);
+  const btn = document.createElement('button');
+  btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
+  btn.textContent = score.name;
+  btn.onclick = () => openScore(origIdx);
+  item.appendChild(star);
+  item.appendChild(btn);
+  return item;
+}
+
+function sortByFav(arr) {
+  // 收藏的排前面，同类内部保持原顺序
+  const fav = [], rest = [];
+  arr.forEach(s => (favorites.has(s.name) ? fav : rest).push(s));
+  return fav.concat(rest);
+}
+
+function renderGrid(list) {
   const grid = document.getElementById('scoreGrid');
   grid.innerHTML = '';
-
-  SCORES.forEach((score, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
-    btn.textContent = score.name;
-    btn.onclick = () => openScore(idx);
-    grid.appendChild(btn);
+  sortByFav(list).forEach(score => {
+    grid.appendChild(buildItem(score, SCORES.indexOf(score)));
   });
+}
 
-  document.getElementById('stats').textContent =
-    `共 ${SCORES.length} 首曲谱 · ${SCORES.filter(s => s.type === 'multi').length} 首多页曲谱`;
+function renderList() {
+  let list = SCORES;
+  if (showFavOnly) list = list.filter(s => favorites.has(s.name));
+  renderGrid(list);
+  const multi = SCORES.filter(s => s.type === 'multi').length;
+  let txt = `共 ${SCORES.length} 首曲谱 · ${multi} 首多页曲谱`;
+  if (favorites.size) txt += ` · 已收藏 ${favorites.size} 首`;
+  document.getElementById('stats').textContent = txt;
 }
 
 function filterScores() {
   const query = document.getElementById('searchInput').value.trim();
-  const grid = document.getElementById('scoreGrid');
-  grid.innerHTML = '';
-
-  const filtered = query ?
+  let list = query ?
     SCORES.filter(s => s.name.toLowerCase().includes(query.toLowerCase())) :
     SCORES;
-
-  filtered.forEach((score) => {
-    const origIdx = SCORES.indexOf(score);
-    const btn = document.createElement('button');
-    btn.className = 'score-btn' + (score.type === 'multi' ? ' multi' : '');
-    btn.textContent = score.name;
-    btn.onclick = () => openScore(origIdx);
-    grid.appendChild(btn);
-  });
-
-  document.getElementById('stats').textContent =
-    `显示 ${filtered.length} / ${SCORES.length} 首`;
+  if (showFavOnly) list = list.filter(s => favorites.has(s.name));
+  renderGrid(list);
+  let txt = `显示 ${list.length} / ${SCORES.length} 首`;
+  if (favorites.size) txt += ` · 已收藏 ${favorites.size} 首`;
+  document.getElementById('stats').textContent = txt;
 }
 
 // ===== Open Score =====
@@ -1026,6 +1138,7 @@ scoreScrollEl.addEventListener('touchmove', (e) => {
 scoreScrollEl.addEventListener('dblclick', resetZoom);
 
 // ===== Init =====
+loadFavorites();
 renderList();
 
 // Keyboard shortcuts
