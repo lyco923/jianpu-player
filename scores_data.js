@@ -1861,4 +1861,4 @@ const SCORES = [
     "type": "single"
   }
 ];
-module.exports = SCORES; = SCORES;
+module.exports = SCORES;
