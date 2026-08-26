@@ -1844,7 +1844,21 @@ const SCORES = [
       "img0280.png"
     ],
     "type": "single"
+  }  ,
+  {
+    "name": "烟雨唱扬州",
+    "pages": ["img0281.jpg"],
+    "type": "single"
+  }  ,
+  {
+    "name": "牧羊曲",
+    "pages": ["img0282.jpg"],
+    "type": "single"
+  }  ,
+  {
+    "name": "相思",
+    "pages": ["img0283.jpg"],
+    "type": "single"
   }
 ];
-
-module.exports = SCORES;
+module.exports = SCORES; = SCORES;
