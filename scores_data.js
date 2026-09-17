@@ -1859,6 +1859,11 @@ const SCORES = [
     "name": "相思",
     "pages": ["img0283.jpg"],
     "type": "single"
+  },
+  {
+    "name": "花之舞",
+    "pages": ["img0284.jpg"],
+    "type": "single"
   }
 ];
 module.exports = SCORES;
