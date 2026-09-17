@@ -64,6 +64,18 @@ body {
   margin-bottom: 8px;
 }
 
+.ver-badge {
+  font-size: 0.42em;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  vertical-align: middle;
+  margin-left: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 .list-header p {
   font-size: 1em;
   opacity: 0.8;
@@ -661,7 +673,7 @@ body {
 <!-- ===== LIST VIEW ===== -->
 <div class="list-view" id="listView">
   <div class="list-header">
-    <h1>2026 简 谱</h1>
+    <h1>2026 简 谱 <span class="ver-badge">v2.0</span></h1>
     <p>曲谱查看器 · 节拍器打拍 · 双指缩放</p>
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="搜索曲谱名称..." oninput="filterScores()">
